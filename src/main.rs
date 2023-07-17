@@ -5,7 +5,6 @@ use notan::text::*;
 #[derive(AppState)]
 struct State {
     font: Font,
-    font2: Font,
 }
 
 #[notan_main]
@@ -26,11 +25,7 @@ fn setup(gfx: &mut Graphics) -> State {
         .create_font(include_bytes!("../assets/Ubuntu-B.ttf"))
         .unwrap();
 
-    let font2 = gfx
-        .create_font(include_bytes!("../assets/kenney_pixel-webfont.ttf"))
-        .unwrap();
-
-    State { font, font2 }
+    State { font }
 }
 
 fn draw(gfx: &mut Graphics, state: &mut State) {
@@ -47,13 +42,6 @@ fn draw(gfx: &mut Graphics, state: &mut State) {
         .h_align_center()
         .color(Color::ORANGE)
         .size(128.0);
-
-    // text.chain("Notan! ").size(50.0).color(Color::RED);
-
-    // text.chain("(Using TextExtension)")
-    //     .font(&state.font2)
-    //     .size(20.0)
-    //     .color(Color::GRAY.with_alpha(0.5));
 
     gfx.render(&text);
 }
