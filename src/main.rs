@@ -29,6 +29,7 @@ struct WeatherFetch {
     location: WeatherLocation,
 }
 
+#[derive(Clone)]
 struct WeatherResults {
     temp: String,
 }
@@ -141,13 +142,12 @@ fn draw(gfx: &mut Graphics, state: &mut State) {
         .color(Color::ORANGE)
         .size(FONT_SIZE);
 
-    let (temp) = if let Ok(weather_results) = state.weather_results.try_lock() {
-        (weather_results.temp.clone())
+    let weather = if let Ok(weather_results) = state.weather_results.try_lock() {
+        weather_results.clone()
     } else {
-        let w = WeatherResults::new();
-        (w.temp)
+        WeatherResults::new()
     };
-    text.add(&temp)
+    text.add(&weather.temp)
         .font(&state.font)
         .position(PADDING, PADDING * 2.0 + FONT_SIZE)
         .color(Color::AQUA)
