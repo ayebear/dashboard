@@ -1,16 +1,29 @@
 use chrono::prelude::*;
 use notan::prelude::*;
 use notan::text::*;
+use weather_util_rust::config::Config;
+use weather_util_rust::weather_api::WeatherApi;
+use weather_util_rust::weather_api::WeatherLocation;
+use weather_util_rust::weather_data;
 
 const FONT_SIZE: f32 = 128.0;
 const PADDING: f32 = 32.0;
 const DATE_TIME_FREQ: f32 = 0.1;
+const WEATHER_FREQ: f32 = 30.0 * 60.0;
 
 #[derive(AppState)]
 struct State {
     font: Font,
     date_time: String,
     date_time_count: f32,
+    weather: Weather,
+    weather_count: f32,
+}
+
+struct Weather {
+    weather_api: WeatherApi,
+    location: WeatherLocation,
+    temp: String,
 }
 
 #[notan_main]
@@ -32,10 +45,28 @@ fn setup(gfx: &mut Graphics) -> State {
         .create_font(include_bytes!("../assets/Ubuntu-B.ttf"))
         .unwrap();
 
+    let weather_config = Config::init_config(None).unwrap();
+    let weather_api = WeatherApi::new(
+        &weather_config.api_key.clone().unwrap(),
+        &weather_config.api_endpoint,
+        &weather_config.api_path,
+        &weather_config.geo_path,
+    );
+    let location = WeatherLocation::ZipCode {
+        zipcode: 20906,
+        country_code: Some(isocountry::CountryCode::USA),
+    };
+
     State {
         font,
         date_time: String::from("?"),
-        date_time_count: 0.0,
+        date_time_count: DATE_TIME_FREQ,
+        weather: Weather {
+            weather_api,
+            location,
+            temp: String::from("? °F"),
+        },
+        weather_count: WEATHER_FREQ,
     }
 }
 
@@ -45,6 +76,28 @@ fn update(app: &mut App, state: &mut State) {
     if state.date_time_count >= DATE_TIME_FREQ {
         state.date_time_count = 0.0;
         state.date_time = Local::now().format("%A %B %d,  %I:%M:%S %p").to_string();
+    }
+
+    if state.weather_count >= WEATHER_FREQ {
+        state.weather_count = 0.0;
+        println!("fetching weather data...");
+        tokio::runtime::Builder::new_multi_thread()
+            .enable_all()
+            .build()
+            .unwrap()
+            .block_on(async {
+                let weather_data = state
+                    .weather
+                    .weather_api
+                    .get_weather_data(&state.weather.location)
+                    .await;
+                if let Ok(weather_data) = weather_data {
+                    println!("{:?}", weather_data);
+                } else {
+                    println!("error fetching weather data :(");
+                }
+            });
+        // state.weather.temp = ;
     }
 }
 
@@ -61,7 +114,7 @@ fn draw(gfx: &mut Graphics, state: &mut State) {
         .color(Color::ORANGE)
         .size(FONT_SIZE);
 
-    text.add("72-90 °F\n82%")
+    text.add(&state.weather.temp)
         .font(&state.font)
         .position(PADDING, PADDING * 2.0 + FONT_SIZE)
         .color(Color::AQUA)

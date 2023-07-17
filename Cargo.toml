@@ -7,4 +7,7 @@ edition = "2021"
 
 [dependencies]
 chrono = "0.4.26"
+isocountry = "0.3.2"
 notan = { version = "0.9.5", features = ["text"] }
+tokio = "1.29.1"
+weather_util_rust = "0.16.10"
