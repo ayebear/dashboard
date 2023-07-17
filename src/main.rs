@@ -2,6 +2,8 @@ use chrono::prelude::*;
 use notan::prelude::*;
 use notan::text::*;
 
+const FONT_SIZE: f32 = 128.0;
+
 #[derive(AppState)]
 struct State {
     font: Font,
@@ -29,19 +31,19 @@ fn setup(gfx: &mut Graphics) -> State {
 }
 
 fn draw(gfx: &mut Graphics, state: &mut State) {
-    let date_as_string = Utc::now().to_string();
+    let date_as_string = Local::now().format("%A %B %d,  %I:%M:%S %p").to_string();
     let (width, height) = gfx.size();
-    let (cw, ch) = ((width as f32) / 2.0, (height as f32) / 2.0);
+    let (cx, cy) = ((width as f32) / 2.0, (height as f32) / 2.0);
 
     let mut text = gfx.create_text();
     text.clear_color(Color::BLACK);
 
     text.add(&date_as_string)
         .font(&state.font)
-        .position(cw, ch - 64.0)
+        .position(cx, cy - FONT_SIZE / 2.0)
         .h_align_center()
         .color(Color::ORANGE)
-        .size(128.0);
+        .size(FONT_SIZE);
 
     gfx.render(&text);
 }
