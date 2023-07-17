@@ -1,8 +1,8 @@
-use std::sync::Arc;
-
 use chrono::prelude::*;
+use itertools::join;
 use notan::prelude::*;
 use notan::text::*;
+use std::sync::Arc;
 use tokio::sync::Mutex;
 use weather_util_rust::config::Config;
 use weather_util_rust::weather_api::WeatherApi;
@@ -32,7 +32,9 @@ struct WeatherFetch {
 #[derive(Clone)]
 struct WeatherResults {
     temp: String,
+    temp_range: String,
     hum: String,
+    cond: String,
 }
 
 impl WeatherResults {
@@ -45,7 +47,9 @@ impl Default for WeatherResults {
     fn default() -> Self {
         WeatherResults {
             temp: String::from("?°F"),
+            temp_range: String::from("[?—?°F]"),
             hum: String::from("?%"),
+            cond: String::from("  ???"),
         }
     }
 }
@@ -123,18 +127,24 @@ fn update(app: &mut App, state: &mut State) {
                 println!("{:?}", weather_data);
                 let mut weather_out = weather_results.lock().await;
                 weather_out.temp = format!(
-                    "{:.2}°F ~{:.2}°F [{:.2}-{:.2}°F]",
+                    "{:.2}°F  ~{:.2}°F",
                     weather_data.main.temp.fahrenheit(),
                     weather_data.main.feels_like.fahrenheit(),
+                );
+                weather_out.temp_range = format!(
+                    "[{:.2}—{:.2}°F]",
                     weather_data.main.temp_min.fahrenheit(),
                     weather_data.main.temp_max.fahrenheit()
                 );
                 weather_out.hum = format!("{}%", weather_data.main.humidity);
+                weather_out.cond = format!(
+                    "  {}",
+                    join(weather_data.weather.iter().map(|cond| &cond.main), " ")
+                );
             } else {
                 println!("error fetching weather data :(");
             }
         });
-        // state.weather.temp = ;
     }
 }
 
@@ -161,19 +171,24 @@ fn draw(gfx: &mut Graphics, state: &mut State) {
         .position(PADDING, PADDING * 2.0 + FONT_SIZE)
         .color(Color::AQUA)
         .size(FONT_SIZE);
-    text.add(&weather.hum)
+    text.add(&weather.temp_range)
         .font(&state.font)
         .position(PADDING, PADDING * 3.0 + FONT_SIZE * 2.0)
+        .color(Color::GRAY)
+        .size(FONT_SIZE);
+    text.add(&weather.hum)
+        .font(&state.font)
+        .position(PADDING, PADDING * 4.0 + FONT_SIZE * 3.0)
         .color(Color::BLUE)
         .size(FONT_SIZE);
-    text.chain("  Clear")
+    text.chain(&weather.cond)
         .font(&state.font)
         .color(Color::YELLOW)
         .size(FONT_SIZE);
 
     text.add("NVDA $542.69\nAMD $157.24\nTSLA $303.89")
         .font(&state.font)
-        .position(PADDING, PADDING * 4.0 + FONT_SIZE * 3.0)
+        .position(cx, PADDING * 2.0 + FONT_SIZE)
         .color(Color::GREEN)
         .size(FONT_SIZE);
 

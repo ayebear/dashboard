@@ -626,6 +626,7 @@ version = "0.1.0"
 dependencies = [
  "chrono",
  "isocountry",
+ "itertools",
  "notan",
  "tokio",
  "weather_util_rust",
@@ -1455,6 +1456,15 @@ checksum = "1ea1dc4bf0fb4904ba83ffdb98af3d9c325274e92e6e295e4151e86c96363e04"
 dependencies = [
  "serde",
  "thiserror",
+]
+
+[[package]]
+name = "itertools"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b1c173a5686ce8bfa551b3563d0c2170bf24ca44da99c7ca4bfdab5418c3fe57"
+dependencies = [
+ "either",
 ]
 
 [[package]]
