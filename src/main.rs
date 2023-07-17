@@ -1,7 +1,9 @@
 use chrono::prelude::*;
+use dotenvy::dotenv;
 use itertools::join;
 use notan::prelude::*;
 use notan::text::*;
+use std::env;
 use std::sync::Arc;
 use std::sync::Mutex;
 use weather_util_rust::config::Config;
@@ -12,7 +14,7 @@ const FONT_SIZE: f32 = 128.0;
 const PADDING: f32 = 32.0;
 const DATE_TIME_FREQ: f32 = 0.1;
 const WEATHER_FREQ: f32 = 15.0 * 60.0;
-const STOCK_FREQ: f32 = 15.0;
+const STOCK_FREQ: f32 = 60.0 * 60.0;
 
 #[derive(AppState)]
 struct State {
@@ -23,6 +25,8 @@ struct State {
     weather_fetch: Arc<tokio::sync::Mutex<WeatherFetch>>,
     weather_results: Arc<Mutex<WeatherResults>>,
     weather_count: f32,
+    stocks: Vec<String>,
+    stocks_api_key: String,
     stock_results: Arc<Mutex<StockResults>>,
     stock_count: f32,
 }
@@ -89,6 +93,14 @@ fn main() -> Result<(), String> {
 }
 
 fn setup(gfx: &mut Graphics) -> State {
+    dotenv().expect(".env file not found");
+    let stocks_api_key = env::var("STOCKS_API_KEY").unwrap();
+    let stocks: Vec<String> = env::var("STOCKS")
+        .unwrap()
+        .split(',')
+        .map(str::to_string)
+        .collect();
+
     let runtime = tokio::runtime::Builder::new_multi_thread()
         .enable_all()
         .build()
@@ -121,6 +133,8 @@ fn setup(gfx: &mut Graphics) -> State {
         })),
         weather_results: Arc::new(Mutex::new(WeatherResults::new())),
         weather_count: WEATHER_FREQ - 1.0,
+        stocks,
+        stocks_api_key,
         stock_results: Arc::new(Mutex::new(StockResults::new())),
         stock_count: STOCK_FREQ - 1.0,
     }
@@ -176,17 +190,25 @@ fn update(app: &mut App, state: &mut State) {
         state.stock_count = 0.0;
         println!("update stocks");
         let stock_results = state.stock_results.clone();
+        let stocks_api_key = state.stocks_api_key.clone();
         state.runtime.spawn(async move {
+            // Get stocks
+            // let client = twelvedata::Client::new(&stocks_api_key);
+            // let tsla_price = realtime_price(&stocks_api_key, "TSLA").await;
+            let av = alpha_vantage::set_api(stocks_api_key, reqwest::Client::new());
+            let tsla = av.quote("TSLA").json().await.unwrap();
+
+            // Store results
             let mut stock_results = stock_results.lock().unwrap();
             stock_results.stocks.clear();
             stock_results.stocks.push(Stock {
-                display: "TSLA $999.99\n".into(),
-                is_up: true,
+                display: format!("TSLA ${} %{}\n", tsla.price(), tsla.change_percent()),
+                is_up: tsla.change_percent().is_sign_positive(),
             });
-            stock_results.stocks.push(Stock {
-                display: "AAPL $0.01\n".into(),
-                is_up: false,
-            });
+            // stock_results.stocks.push(Stock {
+            //     display: "AAPL $0.01\n".into(),
+            //     is_up: false,
+            // });
             println!("stocks updated");
         });
     }
