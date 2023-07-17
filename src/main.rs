@@ -1,10 +1,9 @@
 use chrono::prelude::*;
-use core::time;
 use itertools::join;
 use notan::prelude::*;
 use notan::text::*;
 use std::sync::Arc;
-use tokio::sync::Mutex;
+use std::sync::Mutex;
 use weather_util_rust::config::Config;
 use weather_util_rust::weather_api::WeatherApi;
 use weather_util_rust::weather_api::WeatherLocation;
@@ -21,12 +20,11 @@ struct State {
     font: Font,
     date_time: String,
     date_time_count: f32,
-    weather_fetch: Arc<Mutex<WeatherFetch>>,
+    weather_fetch: Arc<tokio::sync::Mutex<WeatherFetch>>,
     weather_results: Arc<Mutex<WeatherResults>>,
     weather_count: f32,
-    stock_results: Arc<std::sync::Mutex<StockResults>>,
+    stock_results: Arc<Mutex<StockResults>>,
     stock_count: f32,
-    // results: Arc<std::sync::Mutex<Results>>,
 }
 
 struct WeatherFetch {
@@ -116,14 +114,14 @@ fn setup(gfx: &mut Graphics) -> State {
         runtime,
         font,
         date_time: String::from("?"),
-        date_time_count: DATE_TIME_FREQ - 1.0,
-        weather_fetch: Arc::new(Mutex::new(WeatherFetch {
+        date_time_count: DATE_TIME_FREQ,
+        weather_fetch: Arc::new(tokio::sync::Mutex::new(WeatherFetch {
             weather_api,
             location,
         })),
         weather_results: Arc::new(Mutex::new(WeatherResults::new())),
         weather_count: WEATHER_FREQ - 1.0,
-        stock_results: Arc::new(std::sync::Mutex::new(StockResults::new())),
+        stock_results: Arc::new(Mutex::new(StockResults::new())),
         stock_count: STOCK_FREQ - 1.0,
     }
 }
@@ -152,7 +150,7 @@ fn update(app: &mut App, state: &mut State) {
                 .await;
             if let Ok(weather_data) = weather_data {
                 println!("{:?}", weather_data);
-                let mut weather_out = weather_results.lock().await;
+                let mut weather_out = weather_results.lock().unwrap();
                 weather_out.temp = format!(
                     "{:.2}°F  ~{:.2}°F",
                     weather_data.main.temp.fahrenheit(),
@@ -179,8 +177,8 @@ fn update(app: &mut App, state: &mut State) {
         println!("update stocks");
         let stock_results = state.stock_results.clone();
         state.runtime.spawn(async move {
-            std::thread::sleep(time::Duration::from_secs(5));
             let mut stock_results = stock_results.lock().unwrap();
+            stock_results.stocks.clear();
             stock_results.stocks.push(Stock {
                 display: "TSLA $999.99\n".into(),
                 is_up: true,
