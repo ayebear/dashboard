@@ -32,6 +32,7 @@ struct WeatherFetch {
 #[derive(Clone)]
 struct WeatherResults {
     temp: String,
+    hum: String,
 }
 
 impl WeatherResults {
@@ -43,7 +44,8 @@ impl WeatherResults {
 impl Default for WeatherResults {
     fn default() -> Self {
         WeatherResults {
-            temp: String::from("? °F"),
+            temp: String::from("?°F"),
+            hum: String::from("?%"),
         }
     }
 }
@@ -120,7 +122,14 @@ fn update(app: &mut App, state: &mut State) {
             if let Ok(weather_data) = weather_data {
                 println!("{:?}", weather_data);
                 let mut weather_out = weather_results.lock().await;
-                weather_out.temp = format!("{:.2} °F", weather_data.main.temp.fahrenheit());
+                weather_out.temp = format!(
+                    "{:.2}°F ~{:.2}°F [{:.2}-{:.2}°F]",
+                    weather_data.main.temp.fahrenheit(),
+                    weather_data.main.feels_like.fahrenheit(),
+                    weather_data.main.temp_min.fahrenheit(),
+                    weather_data.main.temp_max.fahrenheit()
+                );
+                weather_out.hum = format!("{}%", weather_data.main.humidity);
             } else {
                 println!("error fetching weather data :(");
             }
@@ -152,10 +161,19 @@ fn draw(gfx: &mut Graphics, state: &mut State) {
         .position(PADDING, PADDING * 2.0 + FONT_SIZE)
         .color(Color::AQUA)
         .size(FONT_SIZE);
+    text.add(&weather.hum)
+        .font(&state.font)
+        .position(PADDING, PADDING * 3.0 + FONT_SIZE * 2.0)
+        .color(Color::BLUE)
+        .size(FONT_SIZE);
+    text.chain("  Clear")
+        .font(&state.font)
+        .color(Color::YELLOW)
+        .size(FONT_SIZE);
 
     text.add("NVDA $542.69\nAMD $157.24\nTSLA $303.89")
         .font(&state.font)
-        .position(cx, PADDING * 2.0 + FONT_SIZE)
+        .position(PADDING, PADDING * 4.0 + FONT_SIZE * 3.0)
         .color(Color::GREEN)
         .size(FONT_SIZE);
 
