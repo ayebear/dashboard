@@ -1,4 +1,5 @@
 use chrono::prelude::*;
+use core::time;
 use itertools::join;
 use notan::prelude::*;
 use notan::text::*;
@@ -12,6 +13,7 @@ const FONT_SIZE: f32 = 128.0;
 const PADDING: f32 = 32.0;
 const DATE_TIME_FREQ: f32 = 0.1;
 const WEATHER_FREQ: f32 = 15.0 * 60.0;
+const STOCK_FREQ: f32 = 15.0;
 
 #[derive(AppState)]
 struct State {
@@ -22,6 +24,9 @@ struct State {
     weather_fetch: Arc<Mutex<WeatherFetch>>,
     weather_results: Arc<Mutex<WeatherResults>>,
     weather_count: f32,
+    stock_results: Arc<std::sync::Mutex<StockResults>>,
+    stock_count: f32,
+    // results: Arc<std::sync::Mutex<Results>>,
 }
 
 struct WeatherFetch {
@@ -51,6 +56,23 @@ impl Default for WeatherResults {
             hum: String::from("?%"),
             cond: String::from("  ???"),
         }
+    }
+}
+
+#[derive(Default, Clone)]
+struct StockResults {
+    stocks: Vec<Stock>,
+}
+
+#[derive(Default, Clone)]
+struct Stock {
+    display: String,
+    is_up: bool,
+}
+
+impl StockResults {
+    fn new() -> Self {
+        Default::default()
     }
 }
 
@@ -94,18 +116,23 @@ fn setup(gfx: &mut Graphics) -> State {
         runtime,
         font,
         date_time: String::from("?"),
-        date_time_count: DATE_TIME_FREQ,
+        date_time_count: DATE_TIME_FREQ - 1.0,
         weather_fetch: Arc::new(Mutex::new(WeatherFetch {
             weather_api,
             location,
         })),
         weather_results: Arc::new(Mutex::new(WeatherResults::new())),
-        weather_count: WEATHER_FREQ,
+        weather_count: WEATHER_FREQ - 1.0,
+        stock_results: Arc::new(std::sync::Mutex::new(StockResults::new())),
+        stock_count: STOCK_FREQ - 1.0,
     }
 }
 
 fn update(app: &mut App, state: &mut State) {
-    state.date_time_count += app.timer.delta_f32();
+    let dt = app.timer.delta_f32();
+    state.date_time_count += dt;
+    state.weather_count += dt;
+    state.stock_count += dt;
 
     if state.date_time_count >= DATE_TIME_FREQ {
         state.date_time_count = 0.0;
@@ -144,6 +171,25 @@ fn update(app: &mut App, state: &mut State) {
             } else {
                 println!("error fetching weather data :(");
             }
+        });
+    }
+
+    if state.stock_count >= STOCK_FREQ {
+        state.stock_count = 0.0;
+        println!("update stocks");
+        let stock_results = state.stock_results.clone();
+        state.runtime.spawn(async move {
+            std::thread::sleep(time::Duration::from_secs(5));
+            let mut stock_results = stock_results.lock().unwrap();
+            stock_results.stocks.push(Stock {
+                display: "TSLA $999.99\n".into(),
+                is_up: true,
+            });
+            stock_results.stocks.push(Stock {
+                display: "AAPL $0.01\n".into(),
+                is_up: false,
+            });
+            println!("stocks updated");
         });
     }
 }
@@ -186,11 +232,23 @@ fn draw(gfx: &mut Graphics, state: &mut State) {
         .color(Color::YELLOW)
         .size(FONT_SIZE);
 
-    text.add("NVDA $542.69\nAMD $157.24\nTSLA $303.89")
+    let stock_results = state.stock_results.lock().unwrap();
+    text.add("\n")
         .font(&state.font)
-        .position(cx, PADDING * 2.0 + FONT_SIZE)
-        .color(Color::GREEN)
+        .position(cx, PADDING * 2.0)
+        .color(Color::GRAY)
         .size(FONT_SIZE);
+    for stock in &stock_results.stocks {
+        let color = if stock.is_up {
+            Color::GREEN
+        } else {
+            Color::RED
+        };
+        text.chain(&stock.display)
+            .font(&state.font)
+            .color(color)
+            .size(FONT_SIZE);
+    }
 
     gfx.render(&text);
 }
