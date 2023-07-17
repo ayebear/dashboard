@@ -4,7 +4,6 @@ use notan::text::*;
 use weather_util_rust::config::Config;
 use weather_util_rust::weather_api::WeatherApi;
 use weather_util_rust::weather_api::WeatherLocation;
-use weather_util_rust::weather_data;
 
 const FONT_SIZE: f32 = 128.0;
 const PADDING: f32 = 32.0;
@@ -13,6 +12,7 @@ const WEATHER_FREQ: f32 = 30.0 * 60.0;
 
 #[derive(AppState)]
 struct State {
+    runtime: tokio::runtime::Runtime,
     font: Font,
     date_time: String,
     date_time_count: f32,
@@ -20,6 +20,7 @@ struct State {
     weather_count: f32,
 }
 
+#[derive(Clone)]
 struct Weather {
     weather_api: WeatherApi,
     location: WeatherLocation,
@@ -41,6 +42,11 @@ fn main() -> Result<(), String> {
 }
 
 fn setup(gfx: &mut Graphics) -> State {
+    let runtime = tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()
+        .unwrap();
+
     let font = gfx
         .create_font(include_bytes!("../assets/Ubuntu-B.ttf"))
         .unwrap();
@@ -58,6 +64,7 @@ fn setup(gfx: &mut Graphics) -> State {
     };
 
     State {
+        runtime,
         font,
         date_time: String::from("?"),
         date_time_count: DATE_TIME_FREQ,
@@ -81,22 +88,18 @@ fn update(app: &mut App, state: &mut State) {
     if state.weather_count >= WEATHER_FREQ {
         state.weather_count = 0.0;
         println!("fetching weather data...");
-        tokio::runtime::Builder::new_multi_thread()
-            .enable_all()
-            .build()
-            .unwrap()
-            .block_on(async {
-                let weather_data = state
-                    .weather
-                    .weather_api
-                    .get_weather_data(&state.weather.location)
-                    .await;
-                if let Ok(weather_data) = weather_data {
-                    println!("{:?}", weather_data);
-                } else {
-                    println!("error fetching weather data :(");
-                }
-            });
+        let weather = state.weather.clone();
+        state.runtime.spawn(async move {
+            let weather_data = weather
+                .weather_api
+                .get_weather_data(&weather.location)
+                .await;
+            if let Ok(weather_data) = weather_data {
+                println!("{:?}", weather_data);
+            } else {
+                println!("error fetching weather data :(");
+            }
+        });
         // state.weather.temp = ;
     }
 }
