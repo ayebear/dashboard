@@ -1,3 +1,6 @@
+use std::sync::Arc;
+use std::sync::Mutex;
+
 use chrono::prelude::*;
 use notan::prelude::*;
 use notan::text::*;
@@ -8,7 +11,7 @@ use weather_util_rust::weather_api::WeatherLocation;
 const FONT_SIZE: f32 = 128.0;
 const PADDING: f32 = 32.0;
 const DATE_TIME_FREQ: f32 = 0.1;
-const WEATHER_FREQ: f32 = 30.0 * 60.0;
+const WEATHER_FREQ: f32 = 15.0 * 60.0;
 
 #[derive(AppState)]
 struct State {
@@ -16,14 +19,17 @@ struct State {
     font: Font,
     date_time: String,
     date_time_count: f32,
-    weather: Weather,
+    weather_fetch: Arc<tokio::sync::Mutex<WeatherFetch>>,
+    weather_results: Arc<Mutex<WeatherResults>>,
     weather_count: f32,
 }
 
-#[derive(Clone)]
-struct Weather {
+struct WeatherFetch {
     weather_api: WeatherApi,
     location: WeatherLocation,
+}
+
+struct WeatherResults {
     temp: String,
 }
 
@@ -68,11 +74,13 @@ fn setup(gfx: &mut Graphics) -> State {
         font,
         date_time: String::from("?"),
         date_time_count: DATE_TIME_FREQ,
-        weather: Weather {
+        weather_fetch: Arc::new(tokio::sync::Mutex::new(WeatherFetch {
             weather_api,
             location,
+        })),
+        weather_results: Arc::new(Mutex::new(WeatherResults {
             temp: String::from("? °F"),
-        },
+        })),
         weather_count: WEATHER_FREQ,
     }
 }
@@ -88,14 +96,19 @@ fn update(app: &mut App, state: &mut State) {
     if state.weather_count >= WEATHER_FREQ {
         state.weather_count = 0.0;
         println!("fetching weather data...");
-        let weather = state.weather.clone();
+        let weather_fetch = state.weather_fetch.clone();
+        let weather_results = state.weather_results.clone();
         state.runtime.spawn(async move {
+            let weather = weather_fetch.lock().await;
             let weather_data = weather
                 .weather_api
                 .get_weather_data(&weather.location)
                 .await;
             if let Ok(weather_data) = weather_data {
                 println!("{:?}", weather_data);
+                println!("temp: {}", weather_data.main.temp.fahrenheit());
+                let mut weather_out = weather_results.lock().unwrap();
+                weather_out.temp = format!("{:.2} °F", weather_data.main.temp.fahrenheit());
             } else {
                 println!("error fetching weather data :(");
             }
@@ -117,7 +130,8 @@ fn draw(gfx: &mut Graphics, state: &mut State) {
         .color(Color::ORANGE)
         .size(FONT_SIZE);
 
-    text.add(&state.weather.temp)
+    let binding = state.weather_results.lock().unwrap();
+    text.add(&binding.temp)
         .font(&state.font)
         .position(PADDING, PADDING * 2.0 + FONT_SIZE)
         .color(Color::AQUA)
