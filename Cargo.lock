@@ -651,6 +651,7 @@ dependencies = [
  "alpha_vantage",
  "chrono",
  "dotenvy",
+ "futures",
  "isocountry",
  "itertools",
  "notan",

@@ -9,6 +9,7 @@ edition = "2021"
 alpha_vantage = "0.10.0"
 chrono = "0.4.26"
 dotenvy = "0.15.7"
+futures = "0.3.28"
 isocountry = "0.3.2"
 itertools = "0.11.0"
 notan = { version = "0.9.5", features = ["text"] }

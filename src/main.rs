@@ -1,5 +1,6 @@
 use chrono::prelude::*;
 use dotenvy::dotenv;
+use futures::future;
 use itertools::join;
 use notan::prelude::*;
 use notan::text::*;
@@ -191,24 +192,34 @@ fn update(app: &mut App, state: &mut State) {
         println!("update stocks");
         let stock_results = state.stock_results.clone();
         let stocks_api_key = state.stocks_api_key.clone();
+        let stocks = state.stocks.clone();
         state.runtime.spawn(async move {
             // Get stocks
-            // let client = twelvedata::Client::new(&stocks_api_key);
-            // let tsla_price = realtime_price(&stocks_api_key, "TSLA").await;
             let av = alpha_vantage::set_api(stocks_api_key, reqwest::Client::new());
-            let tsla = av.quote("TSLA").json().await.unwrap();
+            let calls = stocks.into_iter().map(|ticker| {
+                let av = &av;
+                async move { av.quote(&ticker).json().await }
+            });
+            let results = future::join_all(calls).await;
 
             // Store results
             let mut stock_results = stock_results.lock().unwrap();
             stock_results.stocks.clear();
-            stock_results.stocks.push(Stock {
-                display: format!("TSLA ${} %{}\n", tsla.price(), tsla.change_percent()),
-                is_up: tsla.change_percent().is_sign_positive(),
-            });
-            // stock_results.stocks.push(Stock {
-            //     display: "AAPL $0.01\n".into(),
-            //     is_up: false,
-            // });
+            for result in results {
+                if let Ok(result) = result {
+                    let is_up = result.change_percent().is_sign_positive();
+                    // let up_symbol = if is_up { "￪" } else { "￬" }; // not working in ubuntu font/notan
+                    stock_results.stocks.push(Stock {
+                        display: format!(
+                            "{} ${:.2}, {:.2}%\n",
+                            result.symbol(),
+                            result.price(),
+                            result.change_percent()
+                        ),
+                        is_up,
+                    });
+                }
+            }
             println!("stocks updated");
         });
     }
@@ -258,16 +269,23 @@ fn draw(gfx: &mut Graphics, state: &mut State) {
         .position(cx, PADDING * 2.0)
         .color(Color::GRAY)
         .size(FONT_SIZE);
-    for stock in &stock_results.stocks {
-        let color = if stock.is_up {
-            Color::GREEN
-        } else {
-            Color::RED
-        };
-        text.chain(&stock.display)
+    if stock_results.stocks.is_empty() {
+        text.chain("Stocks\n")
             .font(&state.font)
-            .color(color)
+            .color(Color::GRAY)
             .size(FONT_SIZE);
+    } else {
+        for stock in &stock_results.stocks {
+            let color = if stock.is_up {
+                Color::GREEN
+            } else {
+                Color::RED
+            };
+            text.chain(&stock.display)
+                .font(&state.font)
+                .color(color)
+                .size(FONT_SIZE);
+        }
     }
 
     gfx.render(&text);
