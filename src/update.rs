@@ -83,7 +83,7 @@ pub fn update(app: &mut App, state: &mut State) {
                     });
                 }
             }
-            println!("stocks updated");
+            println!("stocks updated {}", stock_results.stocks.len());
         });
     }
 }
