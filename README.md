@@ -2,6 +2,8 @@
 
 ## Run
 
+Create `.env` file - see `.env.example`.
+
 Run in release mode:
 
 ```
