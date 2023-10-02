@@ -8,7 +8,7 @@ use weather_util_rust::config::Config;
 use weather_util_rust::weather_api::WeatherApi;
 use weather_util_rust::weather_api::WeatherLocation;
 
-pub const FONT_SIZE: f32 = 128.0;
+pub const FONT_SIZE: f32 = 96.0;
 pub const PADDING: f32 = 32.0;
 pub const DATE_TIME_FREQ: f32 = 0.1;
 pub const WEATHER_FREQ: f32 = 15.0 * 60.0;
@@ -76,7 +76,8 @@ impl StockResults {
     }
 }
 
-pub fn setup(gfx: &mut Graphics) -> State {
+pub fn setup(app: &mut App, gfx: &mut Graphics) -> State {
+    app.window().set_cursor(CursorIcon::None);
     dotenv().expect(".env file not found");
     let stocks_api_key = env::var("STOCKS_API_KEY").unwrap();
     let stocks: Vec<String> = env::var("STOCKS")
