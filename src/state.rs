@@ -92,7 +92,7 @@ pub fn setup(app: &mut App, gfx: &mut Graphics) -> State {
         .unwrap();
 
     let font = gfx
-        .create_font(include_bytes!("../assets/Ubuntu-B.ttf"))
+        .create_font(include_bytes!("../assets/KulimPark-Bold.ttf"))
         .unwrap();
 
     let weather_config = Config::init_config(None).unwrap();
