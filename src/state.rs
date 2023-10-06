@@ -1,3 +1,4 @@
+use crate::consts::*;
 use dotenvy::dotenv;
 use notan::prelude::*;
 use notan::text::*;
@@ -7,12 +8,6 @@ use std::sync::Mutex;
 use weather_util_rust::config::Config;
 use weather_util_rust::weather_api::WeatherApi;
 use weather_util_rust::weather_api::WeatherLocation;
-
-pub const FONT_SIZE: f32 = 96.0;
-pub const PADDING: f32 = 32.0;
-pub const DATE_TIME_FREQ: f32 = 0.1;
-pub const WEATHER_FREQ: f32 = 15.0 * 60.0;
-pub const STOCK_FREQ: f32 = 60.0 * 60.0;
 
 #[derive(AppState)]
 pub struct State {
