@@ -12,7 +12,8 @@ pub fn update(app: &mut App, state: &mut State) {
 
     if state.date_time_count >= DATE_TIME_FREQ {
         state.date_time_count = 0.0;
-        state.date_time = Local::now().format("%A %B %d,  %I:%M:%S %p").to_string();
+        state.date = Local::now().format("%A, %B %d").to_string();
+        state.time = Local::now().format("%I:%M:%S %p").to_string();
     }
 
     if state.weather_count >= WEATHER_FREQ {
@@ -29,19 +30,26 @@ pub fn update(app: &mut App, state: &mut State) {
             if let Ok(weather_data) = weather_data {
                 println!("{:?}", weather_data);
                 let mut weather_out = weather_results.lock().unwrap();
+                //temperature format
                 weather_out.temp = format!(
-                    "{:.2}°F  ~{:.2}°F",
-                    weather_data.main.temp.fahrenheit(),
-                    weather_data.main.feels_like.fahrenheit(),
+                    "{:.2}°F",
+                    weather_data.main.temp.fahrenheit()
                 );
-                weather_out.temp_range = format!(
-                    "[{:.2}—{:.2}°F]",
-                    weather_data.main.temp_min.fahrenheit(),
+                weather_out.temp_f = format!(
+                    "~{:.2}°F",
+                    weather_data.main.feels_like.fahrenheit()
+                );
+                weather_out.temp_l = format!(
+                    "{:.2}°F", 
+                    weather_data.main.temp_min.fahrenheit()
+                );
+                weather_out.temp_h = format!(
+                    "{:.2}°F",
                     weather_data.main.temp_max.fahrenheit()
                 );
                 weather_out.hum = format!("{}%", weather_data.main.humidity);
                 weather_out.cond = format!(
-                    "  {}",
+                    "{}",
                     join(weather_data.weather.iter().map(|cond| &cond.main), " ")
                 );
             } else {
@@ -52,7 +60,7 @@ pub fn update(app: &mut App, state: &mut State) {
 
     if state.stock_count >= STOCK_FREQ {
         state.stock_count = 0.0;
-        println!("update stocks");
+        println!("\nupdate stocks");
         let stock_results = state.stock_results.clone();
         let stocks_api_key = state.stocks_api_key.clone();
         let stocks = state.stocks.clone();
@@ -72,18 +80,24 @@ pub fn update(app: &mut App, state: &mut State) {
                 if let Ok(result) = result {
                     let is_up = result.change_percent().is_sign_positive();
                     // let up_symbol = if is_up { "￪" } else { "￬" }; // not working in ubuntu font/notan
+                    //put symbol, price, percent into individual strings: draws will update the necessary 
+                    //space between them accordingly.
                     stock_results.stocks.push(Stock {
+                        // symbol: format!("{:<4}{:.5}",result.symbol(),"x"),
+                        // price: format!("${:.2}",result.price()),
+                        // percent: format!("  {:.2}%\n",result.change_percent()),
+                        is_up,
                         display: format!(
-                            "{} ${:.2}, {:.2}%\n",
+                            "{:<4}    ${:.2}    {:0width$.2}%\n",
                             result.symbol(),
                             result.price(),
-                            result.change_percent()
+                            result.change_percent(),
+                            width = 2,
                         ),
-                        is_up,
                     });
                 }
             }
-            println!("stocks updated {}", stock_results.stocks.len());
+            println!("\nstocks updated {}", stock_results.stocks.len());
         });
     }
 }

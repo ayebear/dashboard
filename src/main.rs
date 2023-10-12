@@ -1,3 +1,4 @@
+use notan::draw::DrawConfig;
 use notan::prelude::*;
 use notan::text::*;
 
@@ -10,10 +11,11 @@ fn main() -> Result<(), String> {
     let win_config = WindowConfig::new()
         .resizable(true)
         .maximized(true)
-        .fullscreen(true);
+        .fullscreen(false);
     notan::init_with(state::setup)
         .add_config(win_config)
         .add_config(TextConfig)
+        .add_config(DrawConfig)
         .update(update::update)
         .draw(draw::draw)
         .build()

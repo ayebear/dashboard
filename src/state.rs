@@ -8,7 +8,15 @@ use weather_util_rust::config::Config;
 use weather_util_rust::weather_api::WeatherApi;
 use weather_util_rust::weather_api::WeatherLocation;
 
-pub const FONT_SIZE: f32 = 96.0;
+// //for the original dashboard:
+// pub const FONT_SIZE_L: f32 = 96.0; 
+// pub const FONT_SIZE_M: f32 = 64.0;
+// pub const FONT_SIZE_S: f32 = 48.0;
+//testing on a smaller screen:
+pub const FONT_SIZE_L: f32 = 64.0; 
+pub const FONT_SIZE_M: f32 = 48.0;
+pub const FONT_SIZE_S: f32 = 32.0;
+
 pub const PADDING: f32 = 32.0;
 pub const DATE_TIME_FREQ: f32 = 0.1;
 pub const WEATHER_FREQ: f32 = 15.0 * 60.0;
@@ -18,11 +26,14 @@ pub const STOCK_FREQ: f32 = 60.0 * 60.0;
 pub struct State {
     pub runtime: tokio::runtime::Runtime,
     pub font: Font,
-    pub date_time: String,
+    pub symbol_font: Font,
+    pub date: String,
+    pub time: String,
     pub date_time_count: f32,
     pub weather_fetch: Arc<tokio::sync::Mutex<WeatherFetch>>,
     pub weather_results: Arc<Mutex<WeatherResults>>,
     pub weather_count: f32,
+    pub weather_text: Vec<String>,
     pub stocks: Vec<String>,
     pub stocks_api_key: String,
     pub stock_results: Arc<Mutex<StockResults>>,
@@ -36,8 +47,10 @@ pub struct WeatherFetch {
 
 #[derive(Clone)]
 pub struct WeatherResults {
+    pub temp_f: String,
     pub temp: String,
-    pub temp_range: String,
+    pub temp_h: String,
+    pub temp_l: String,
     pub hum: String,
     pub cond: String,
 }
@@ -52,9 +65,11 @@ impl Default for WeatherResults {
     fn default() -> Self {
         WeatherResults {
             temp: String::from("?°F"),
-            temp_range: String::from("[?—?°F]"),
+            temp_f:String::from("?ºF"),
+            temp_h:String::from("?ºF"),
+            temp_l:String::from("?ºF"),
             hum: String::from("?%"),
-            cond: String::from("  ???"),
+            cond: String::from("???"),
         }
     }
 }
@@ -66,7 +81,11 @@ pub struct StockResults {
 
 #[derive(Default, Clone)]
 pub struct Stock {
-    pub display: String,
+    // symbol, price, percent
+    // pub symbol: String, 
+    // pub price: String, 
+    // pub percent: String,
+    pub display: String, //old combo of the three things above.
     pub is_up: bool,
 }
 
@@ -92,7 +111,10 @@ pub fn setup(app: &mut App, gfx: &mut Graphics) -> State {
         .unwrap();
 
     let font = gfx
-        .create_font(include_bytes!("../assets/KulimPark-Bold.ttf"))
+        .create_font(include_bytes!("../assets/Montserrat-SemiBold.ttf"))
+        .unwrap();
+    let symbol_font = gfx
+        .create_font(include_bytes!("../assets/RubikMonoOne.ttf"))
         .unwrap();
 
     let weather_config = Config::init_config(None).unwrap();
@@ -102,15 +124,25 @@ pub fn setup(app: &mut App, gfx: &mut Graphics) -> State {
         &weather_config.api_path,
         &weather_config.geo_path,
     );
+
     let location = WeatherLocation::ZipCode {
         zipcode: 20906,
         country_code: Some(isocountry::CountryCode::USA),
     };
 
+    let text: [&str; 5] = ["feels like", "temp", "high","low", "humidity"];
+    let mut weather_vec: Vec<String> = Vec::new();
+    for str in text {
+        weather_vec.push(String::from(str));
+    }
+
+
     State {
         runtime,
         font,
-        date_time: String::from("?"),
+        symbol_font,
+        date: String::from("?"),
+        time: String::from("?"),
         date_time_count: DATE_TIME_FREQ,
         weather_fetch: Arc::new(tokio::sync::Mutex::new(WeatherFetch {
             weather_api,
@@ -118,6 +150,7 @@ pub fn setup(app: &mut App, gfx: &mut Graphics) -> State {
         })),
         weather_results: Arc::new(Mutex::new(WeatherResults::new())),
         weather_count: WEATHER_FREQ - 1.0,
+        weather_text: weather_vec,
         stocks,
         stocks_api_key,
         stock_results: Arc::new(Mutex::new(StockResults::new())),
