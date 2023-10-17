@@ -1,7 +1,9 @@
+use crate::consts::*;
 use crate::state::*;
 use notan::prelude::*;
 use notan::text::*;
 // use notan::draw::*;
+
 
 pub const COLOR_STOCK_DOWN: Color   = Color::new(0.913725, 0.301961, 0.301961, 1.0);
 pub const COLOR_STOCK_UP: Color     = Color::new(0.560784, 0.905882, 0.741176, 1.0);
@@ -11,7 +13,6 @@ pub const COLOR_VIOLET: Color       = Color::new(0.545098, 0.623529, 0.933333, 1
 // pub const COLOR_FRG_PURPL: Color = Color::new(0.333333, 0.317647, 0.607843, 1.0);
 pub const COLOR_GREY: Color         = Color::new(0.862745, 0.862745, 0.862745, 1.0);
 pub const COLOR_GREEN: Color        = Color::new(0.560784, 0.905882, 0.741176, 1.0);
-
 
 pub fn draw(gfx: &mut Graphics, state: &mut State) {
     let (width, _) = gfx.size();

@@ -2,9 +2,11 @@ use notan::draw::DrawConfig;
 use notan::prelude::*;
 use notan::text::*;
 
+mod consts;
 mod draw;
 mod state;
 mod update;
+mod utils;
 
 #[notan_main]
 fn main() -> Result<(), String> {

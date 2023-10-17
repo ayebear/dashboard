@@ -1,3 +1,4 @@
+use crate::consts::*;
 use dotenvy::dotenv;
 use notan::prelude::*;
 use notan::text::*;
@@ -7,6 +8,7 @@ use std::sync::Mutex;
 use weather_util_rust::config::Config;
 use weather_util_rust::weather_api::WeatherApi;
 use weather_util_rust::weather_api::WeatherLocation;
+
 
 //for the original dashboard:
 pub const FONT_SIZE_L: f32 = 96.0; 
