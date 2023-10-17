@@ -8,14 +8,14 @@ use weather_util_rust::config::Config;
 use weather_util_rust::weather_api::WeatherApi;
 use weather_util_rust::weather_api::WeatherLocation;
 
-// //for the original dashboard:
-// pub const FONT_SIZE_L: f32 = 96.0; 
-// pub const FONT_SIZE_M: f32 = 64.0;
-// pub const FONT_SIZE_S: f32 = 48.0;
-//testing on a smaller screen:
-pub const FONT_SIZE_L: f32 = 64.0; 
-pub const FONT_SIZE_M: f32 = 48.0;
-pub const FONT_SIZE_S: f32 = 32.0;
+//for the original dashboard:
+pub const FONT_SIZE_L: f32 = 96.0; 
+pub const FONT_SIZE_M: f32 = 64.0;
+pub const FONT_SIZE_S: f32 = 48.0;
+// //testing on a smaller screen:
+// pub const FONT_SIZE_L: f32 = 64.0; 
+// pub const FONT_SIZE_M: f32 = 48.0;
+// pub const FONT_SIZE_S: f32 = 32.0;
 
 pub const PADDING: f32 = 32.0;
 pub const DATE_TIME_FREQ: f32 = 0.1;
@@ -82,9 +82,9 @@ pub struct StockResults {
 #[derive(Default, Clone)]
 pub struct Stock {
     // symbol, price, percent
-    // pub symbol: String, 
-    // pub price: String, 
-    // pub percent: String,
+    pub symbol: String, 
+    pub price: String, 
+    pub percent: String,
     pub display: String, //old combo of the three things above.
     pub is_up: bool,
 }
@@ -111,7 +111,7 @@ pub fn setup(app: &mut App, gfx: &mut Graphics) -> State {
         .unwrap();
 
     let font = gfx
-        .create_font(include_bytes!("../assets/Montserrat-SemiBold.ttf"))
+        .create_font(include_bytes!("../assets/UbuntuMono-Bold.ttf"))
         .unwrap();
     let symbol_font = gfx
         .create_font(include_bytes!("../assets/RubikMonoOne.ttf"))

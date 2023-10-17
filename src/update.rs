@@ -83,9 +83,9 @@ pub fn update(app: &mut App, state: &mut State) {
                     //put symbol, price, percent into individual strings: draws will update the necessary 
                     //space between them accordingly.
                     stock_results.stocks.push(Stock {
-                        // symbol: format!("{:<4}{:.5}",result.symbol(),"x"),
-                        // price: format!("${:.2}",result.price()),
-                        // percent: format!("  {:.2}%\n",result.change_percent()),
+                        symbol: format!("{}",result.symbol()),
+                        price: format!("{:.2}",result.price()),
+                        percent: format!("   {:.2}%\n",result.change_percent()),
                         is_up,
                         display: format!(
                             "{:<4}    ${:.2}    {:0width$.2}%\n",

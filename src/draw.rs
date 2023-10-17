@@ -30,11 +30,11 @@ pub fn draw(gfx: &mut Graphics, state: &mut State) {
         .size(FONT_SIZE_L);
     //add time
     text.add(&state.time)
-        .font(&state.symbol_font)
+        .font(&state.font)
         .position(cx - PADDING, 100.0 +PADDING + FONT_SIZE_L)
-        .color(COLOR_GREY)
+        .color(COLOR_VIOLET)
         .h_align_center()
-        .size(FONT_SIZE_S);
+        .size(FONT_SIZE_L);
     
     
     let mut y_pos = 100.0 + PADDING + FONT_SIZE_L + 2.0 * FONT_SIZE_M;
@@ -58,7 +58,7 @@ pub fn draw(gfx: &mut Graphics, state: &mut State) {
             .size(FONT_SIZE_M);
 
     y_pos += FONT_SIZE_M + PADDING;
-    //1/2 of screen for weather
+    //1/2 of screen for weather (description of numbers)
     let mut i = 0.0;
     for wtext in &state.weather_text {
         let color = if i == 0.0 {
@@ -68,12 +68,12 @@ pub fn draw(gfx: &mut Graphics, state: &mut State) {
         };
         text.add(wtext)
             .font(&state.font)
-            .position(cx/5.0, y_pos + i * FONT_SIZE_S)
+            .position(cx/5.0, y_pos + i * FONT_SIZE_M)
             .color(color)
-            .size(FONT_SIZE_S);
+            .size(FONT_SIZE_M);
         i += 1.0;
     }
-    //weather stats
+    //weather stats (the actual numbers)
     let temp_text: [&String; 5] = [&weather.temp_f, &weather.temp,&weather.temp_h,&weather.temp_l,&weather.hum];
     i = 0.0;
     for wtext in temp_text {
@@ -84,33 +84,29 @@ pub fn draw(gfx: &mut Graphics, state: &mut State) {
         };
         text.add(wtext)
             .font(&state.font)
-            .position(4.0 * cx/5.0, y_pos + i * FONT_SIZE_S)
+            .position(4.0 * cx/5.0, y_pos + i * FONT_SIZE_M)
             .h_align_right()
             .color(color)
-            .size(FONT_SIZE_S);
+            .size(FONT_SIZE_M);
         i += 1.0;
     }
 
 
     //STOCKS HERE:
     let stock_results = state.stock_results.lock().unwrap();
-    text.add("Stonks\n")
+    text.add("STONKS\n")
         .font(&state.font)
         .position(cx, y_pos_stocks)
         .h_align_left()
         .color(Color::GRAY)
         .size(FONT_SIZE_M);
-    y_pos = y_pos_stocks + FONT_SIZE_M;
-    if stock_results.stocks.is_empty() {
-        text.add("")
+    y_pos = y_pos_stocks + FONT_SIZE_M + PADDING;
+    text.add("")
             .font(&state.symbol_font)
             .position(cx, y_pos)
             .size(FONT_SIZE_M);
-        text.chain("GOOG  $123.67  02.23%\n")
-            .font(&state.font)
-            .color(COLOR_STOCK_UP)
-            .size(FONT_SIZE_M);
-        text.chain("can not fetch new data\n")
+    if stock_results.stocks.is_empty() {
+        text.chain("can not fetch new stock data\n")
             .font(&state.font)
             .color(Color::GRAY)
             .size(FONT_SIZE_S);
@@ -121,31 +117,48 @@ pub fn draw(gfx: &mut Graphics, state: &mut State) {
             } else {
                 COLOR_STOCK_DOWN
             };
-            // let _space_num: usize= 6 - &stock.symbol.len();
-            text.chain(&stock.display)
-                .font(&state.font)
-                .color(color)
-                .size(FONT_SIZE_M);
-            // text.chain(&stock.symbol)
+            // text.chain(&stock.display)
             //     .font(&state.font)
             //     .color(color)
             //     .size(FONT_SIZE_M);
             
-            // for i in 1..5 {
-            //     text.chain("x")
-            //         .font(&state.font)
-            //         .color(COLOR_BKG)
-            //         .size(FONT_SIZE_M);
-            //     println!("{}", i);
-            // }
-            // text.chain(&stock.price)
-            //     .font(&state.font)
-            //     .color(color)
-            //     .size(FONT_SIZE_M);
-            // text.chain(&stock.percent)
-            //     .font(&state.font)
-            //     .color(color)
-            //     .size(FONT_SIZE_M);
+            text.chain(&stock.symbol)
+                .font(&state.font)
+                .color(color)
+                .size(FONT_SIZE_M);
+
+                let space_num: usize= 8 - &stock.symbol.len();
+                // println!("space num{}", space_num);
+                for  _i in 1..space_num {
+                    text.chain("x")
+                        .font(&state.font)
+                        .color(COLOR_BKG)
+                        .size(FONT_SIZE_M);
+                }
+
+            //add leading zeros to stock price
+            text.chain("$")
+                .font(&state.font)
+                .color(color)
+                .size(FONT_SIZE_M);
+                
+                let space_num: usize= 8 - &stock.price.len();
+                for  _i in 1..space_num {
+                    text.chain("0")
+                        .font(&state.font)
+                        .color(Color::GRAY)
+                        .size(FONT_SIZE_M);
+                }
+            
+                text.chain(&stock.price)
+                    .font(&state.font)
+                    .color(color)
+                    .size(FONT_SIZE_M);
+
+            text.chain(&stock.percent)
+                .font(&state.font)
+                .color(color)
+                .size(FONT_SIZE_M);
         }
     }
 
