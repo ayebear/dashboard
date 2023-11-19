@@ -15,6 +15,7 @@ pub struct State {
     pub runtime: tokio::runtime::Runtime,
     pub font: Font,
     pub date_time: String,
+    pub metric_time: String,
     pub date_time_count: f32,
     pub weather_fetch: Arc<tokio::sync::Mutex<WeatherFetch>>,
     pub weather_results: Arc<Mutex<WeatherResults>>,
@@ -95,6 +96,7 @@ pub fn setup(app: &mut App, gfx: &mut Graphics) -> State {
         runtime,
         font,
         date_time: String::from("?"),
+        metric_time: String::from("?"),
         date_time_count: DATE_TIME_FREQ,
         weather_fetch: Arc::new(tokio::sync::Mutex::new(WeatherFetch {
             weather_api,

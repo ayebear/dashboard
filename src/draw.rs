@@ -4,7 +4,7 @@ use notan::prelude::*;
 use notan::text::*;
 
 pub fn draw(gfx: &mut Graphics, state: &mut State) {
-    let (width, _) = gfx.size();
+    let (width, height) = gfx.size();
     let cx = (width as f32) / 2.0;
 
     let mut text: Text<'_> = gfx.create_text();
@@ -65,6 +65,12 @@ pub fn draw(gfx: &mut Graphics, state: &mut State) {
                 .size(FONT_SIZE);
         }
     }
+
+    text.add(&state.metric_time)
+        .font(&state.font)
+        .position(PADDING, height as f32 - PADDING - FONT_SIZE)
+        .color(COLOR_GREY)
+        .size(FONT_SIZE);
 
     gfx.render(&text);
 }

@@ -1,4 +1,4 @@
-use crate::{consts::*, state::*};
+use crate::{consts::*, state::*, utils::metric_time};
 use chrono::prelude::*;
 use futures::future;
 use itertools::join;
@@ -13,6 +13,8 @@ pub fn update(app: &mut App, state: &mut State) {
     if state.date_time_count >= DATE_TIME_FREQ {
         state.date_time_count = 0.0;
         state.date_time = Local::now().format("%A %B %d,  %I:%M:%S %p").to_string();
+        let (y, d, h, m, s) = metric_time();
+        state.metric_time = format!("{}, Day {}, {:01}:{:02}:{:02.0} Metric Time", y, d, h, m, s);
     }
 
     if state.weather_count >= WEATHER_FREQ {

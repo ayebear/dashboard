@@ -605,6 +605,7 @@ dependencies = [
  "notan",
  "reqwest",
  "serde",
+ "time 0.3.30",
  "tokio",
  "weather_util_rust",
 ]
