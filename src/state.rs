@@ -2,12 +2,13 @@ use crate::consts::*;
 use dotenvy::dotenv;
 use notan::prelude::*;
 use notan::text::*;
+use std::collections::BTreeMap;
 use std::env;
-use std::sync::Arc;
-use std::sync::Mutex;
-use weather_util_rust::config::Config;
-use weather_util_rust::weather_api::WeatherApi;
-use weather_util_rust::weather_api::WeatherLocation;
+use std::sync::{Arc, Mutex};
+use weather_util_rust::{
+    config::Config,
+    weather_api::{WeatherApi, WeatherLocation},
+};
 
 #[derive(AppState)]
 pub struct State {
@@ -37,12 +38,6 @@ pub struct WeatherResults {
     pub cond: String,
 }
 
-impl WeatherResults {
-    pub fn new() -> Self {
-        Default::default()
-    }
-}
-
 impl Default for WeatherResults {
     fn default() -> Self {
         WeatherResults {
@@ -56,19 +51,13 @@ impl Default for WeatherResults {
 
 #[derive(Default, Clone)]
 pub struct StockResults {
-    pub stocks: Vec<Stock>,
+    pub stocks: BTreeMap<String, Stock>,
 }
 
 #[derive(Default, Clone)]
 pub struct Stock {
     pub display: String,
     pub is_up: bool,
-}
-
-impl StockResults {
-    fn new() -> Self {
-        Default::default()
-    }
 }
 
 pub fn setup(app: &mut App, gfx: &mut Graphics) -> State {
@@ -111,11 +100,11 @@ pub fn setup(app: &mut App, gfx: &mut Graphics) -> State {
             weather_api,
             location,
         })),
-        weather_results: Arc::new(Mutex::new(WeatherResults::new())),
+        weather_results: Arc::new(Mutex::new(WeatherResults::default())),
         weather_count: WEATHER_FREQ - 1.0,
         stocks,
         stocks_api_key,
-        stock_results: Arc::new(Mutex::new(StockResults::new())),
+        stock_results: Arc::new(Mutex::new(StockResults::default())),
         stock_count: STOCK_FREQ - 1.0,
     }
 }

@@ -67,12 +67,12 @@ pub fn update(app: &mut App, state: &mut State) {
 
             // Store results
             let mut stock_results = stock_results.lock().unwrap();
-            stock_results.stocks.clear();
-            for result in results {
-                if let Ok(result) = result {
-                    let is_up = result.change_percent().is_sign_positive();
-                    // let up_symbol = if is_up { "￪" } else { "￬" }; // not working in ubuntu font/notan
-                    stock_results.stocks.push(Stock {
+            for result in results.into_iter().flatten() {
+                let is_up = result.change_percent().is_sign_positive();
+                // let up_symbol = if is_up { "￪" } else { "￬" }; // not working in ubuntu font/notan
+                stock_results.stocks.insert(
+                    result.symbol().to_string(),
+                    Stock {
                         display: format!(
                             "{} ${:.2}, {:.2}%\n",
                             result.symbol(),
@@ -80,8 +80,8 @@ pub fn update(app: &mut App, state: &mut State) {
                             result.change_percent()
                         ),
                         is_up,
-                    });
-                }
+                    },
+                );
             }
             println!("stocks updated {}", stock_results.stocks.len());
         });

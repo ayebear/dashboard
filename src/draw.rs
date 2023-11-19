@@ -19,7 +19,7 @@ pub fn draw(gfx: &mut Graphics, state: &mut State) {
     let weather = if let Ok(weather_results) = state.weather_results.try_lock() {
         weather_results.clone()
     } else {
-        WeatherResults::new()
+        WeatherResults::default()
     };
     //current temp
     text.add(&weather.temp)
@@ -57,7 +57,7 @@ pub fn draw(gfx: &mut Graphics, state: &mut State) {
             .color(Color::GRAY)
             .size(FONT_SIZE);
     } else {
-        for stock in &stock_results.stocks {
+        for (_key, stock) in &stock_results.stocks {
             let color = if stock.is_up {
                 COLOR_STOCK_UP
             } else {
