@@ -22,7 +22,6 @@ pub struct State {
     pub weather_fetch: Arc<tokio::sync::Mutex<WeatherFetch>>,
     pub weather_results: Arc<Mutex<WeatherResults>>,
     pub weather_count: f32,
-    pub weather_text: Vec<String>,
     pub stocks: Vec<String>,
     pub stocks_api_key: String,
     pub stock_results: Arc<Mutex<StockResults>>,
@@ -107,12 +106,6 @@ pub fn setup(app: &mut App, gfx: &mut Graphics) -> State {
         country_code: Some(isocountry::CountryCode::USA),
     };
 
-    let text: [&str; 5] = ["feels like", "temp", "high", "low", "humidity"];
-    let mut weather_vec: Vec<String> = Vec::new();
-    for str in text {
-        weather_vec.push(String::from(str));
-    }
-
     State {
         runtime,
         font,
@@ -127,7 +120,6 @@ pub fn setup(app: &mut App, gfx: &mut Graphics) -> State {
         })),
         weather_results: Arc::new(Mutex::new(WeatherResults::default())),
         weather_count: WEATHER_FREQ - 1.0,
-        weather_text: weather_vec,
         stocks,
         stocks_api_key,
         stock_results: Arc::new(Mutex::new(StockResults::default())),

@@ -44,35 +44,29 @@ pub fn draw(gfx: &mut Graphics, state: &mut State) {
         .size(FONT_SIZE_M);
 
     y_pos += FONT_SIZE_M + PADDING;
-    //1/2 of screen for weather (description of numbers)
-    let mut i = 0.0;
-    for wtext in &state.weather_text {
-        let color = if i == 0.0 { COLOR_GREEN } else { COLOR_GREY };
-        text.add(wtext)
-            .font(&state.font)
-            .position(cx / 5.0, y_pos + i * FONT_SIZE_M)
-            .color(color)
-            .size(FONT_SIZE_M);
-        i += 1.0;
-    }
-    //weather stats (the actual numbers)
-    let temp_text: [&String; 5] = [
-        &weather.temp_f,
-        &weather.temp,
-        &weather.temp_h,
-        &weather.temp_l,
-        &weather.hum,
+    // Weather text and data
+    let weather_items = [
+        ("feels", &weather.temp_f, COLOR_GREEN),
+        ("temp", &weather.temp, COLOR_GREY),
+        ("high", &weather.temp_h, COLOR_GREY),
+        ("low", &weather.temp_l, COLOR_GREY),
+        ("humidity", &weather.hum, COLOR_GREY),
     ];
-    i = 0.0;
-    for wtext in temp_text {
-        let color = if i == 0.0 { COLOR_GREEN } else { COLOR_GREY };
+    for (i, (wtext, wdata, color)) in weather_items.iter().enumerate() {
+        let y = y_pos + i as f32 * FONT_SIZE_M;
+        // Weather text
         text.add(wtext)
             .font(&state.font)
-            .position(4.0 * cx / 5.0, y_pos + i * FONT_SIZE_M)
-            .h_align_right()
-            .color(color)
+            .position(cx / 5.0, y)
+            .color(*color)
             .size(FONT_SIZE_M);
-        i += 1.0;
+        // Weather data
+        text.add(wdata)
+            .font(&state.font)
+            .position(4.0 * cx / 5.0, y)
+            .h_align_right()
+            .color(*color)
+            .size(FONT_SIZE_M);
     }
 
     //STOCKS HERE:
