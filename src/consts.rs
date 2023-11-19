@@ -15,3 +15,12 @@ pub const PADDING: f32 = 32.0;
 pub const DATE_TIME_FREQ: f32 = 0.1;
 pub const WEATHER_FREQ: f32 = 15.0 * 60.0;
 pub const STOCK_FREQ: f32 = 60.0 * 60.0;
+
+//for the original dashboard:
+pub const FONT_SIZE_L: f32 = 96.0;
+pub const FONT_SIZE_M: f32 = 64.0;
+pub const FONT_SIZE_S: f32 = 48.0;
+// //testing on a smaller screen:
+// pub const FONT_SIZE_L: f32 = 64.0;
+// pub const FONT_SIZE_M: f32 = 48.0;
+// pub const FONT_SIZE_S: f32 = 32.0;

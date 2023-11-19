@@ -14,9 +14,15 @@ use weather_util_rust::{
 pub struct State {
     pub runtime: tokio::runtime::Runtime,
     pub font: Font,
-    pub date_time: String,
+    pub symbol_font: Font,
+    pub date: String,
+    pub time: String,
     pub metric_time: String,
     pub date_time_count: f32,
+    // there was a reason for using both std::sync::Mutex and tokio::sync::Mutex, but I forgot why.
+    // basically a much simpler architecture would be to have normal state here (no arc/mutex),
+    // and have a channel accept any messages each frame to synchronously update the state.
+    // the async code would be separate and would only be able to send messages back.
     pub weather_fetch: Arc<tokio::sync::Mutex<WeatherFetch>>,
     pub weather_results: Arc<Mutex<WeatherResults>>,
     pub weather_count: f32,
@@ -33,8 +39,10 @@ pub struct WeatherFetch {
 
 #[derive(Clone)]
 pub struct WeatherResults {
+    pub temp_f: String,
     pub temp: String,
-    pub temp_range: String,
+    pub temp_h: String,
+    pub temp_l: String,
     pub hum: String,
     pub cond: String,
 }
@@ -43,9 +51,11 @@ impl Default for WeatherResults {
     fn default() -> Self {
         WeatherResults {
             temp: String::from("?°F"),
-            temp_range: String::from("[?—?°F]"),
+            temp_f: String::from("?ºF"),
+            temp_h: String::from("?ºF"),
+            temp_l: String::from("?ºF"),
             hum: String::from("?%"),
-            cond: String::from("  ???"),
+            cond: String::from("???"),
         }
     }
 }
@@ -57,7 +67,9 @@ pub struct StockResults {
 
 #[derive(Default, Clone)]
 pub struct Stock {
-    pub display: String,
+    pub symbol: String,
+    pub price: String,
+    pub percent: String,
     pub is_up: bool,
 }
 
@@ -77,7 +89,10 @@ pub fn setup(app: &mut App, gfx: &mut Graphics) -> State {
         .unwrap();
 
     let font = gfx
-        .create_font(include_bytes!("../assets/KulimPark-Bold.ttf"))
+        .create_font(include_bytes!("../assets/UbuntuMono-Bold.ttf"))
+        .unwrap();
+    let symbol_font = gfx
+        .create_font(include_bytes!("../assets/RubikMonoOne-Regular.ttf"))
         .unwrap();
 
     let weather_config = Config::init_config(None).unwrap();
@@ -88,14 +103,16 @@ pub fn setup(app: &mut App, gfx: &mut Graphics) -> State {
         &weather_config.geo_path,
     );
     let location = WeatherLocation::ZipCode {
-        zipcode: 20906,
+        zipcode: weather_config.zipcode.expect("zipcode not in .env"),
         country_code: Some(isocountry::CountryCode::USA),
     };
 
     State {
         runtime,
         font,
-        date_time: String::from("?"),
+        symbol_font,
+        date: String::from("?"),
+        time: String::from("?"),
         metric_time: String::from("?"),
         date_time_count: DATE_TIME_FREQ,
         weather_fetch: Arc::new(tokio::sync::Mutex::new(WeatherFetch {

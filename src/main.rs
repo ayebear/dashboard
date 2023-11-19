@@ -1,3 +1,4 @@
+use notan::draw::DrawConfig;
 use notan::prelude::*;
 use notan::text::*;
 
@@ -16,6 +17,7 @@ fn main() -> Result<(), String> {
     notan::init_with(state::setup)
         .add_config(win_config)
         .add_config(TextConfig)
+        .add_config(DrawConfig)
         .update(update::update)
         .draw(draw::draw)
         .build()
