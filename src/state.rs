@@ -10,20 +10,6 @@ use weather_util_rust::{
     weather_api::{WeatherApi, WeatherLocation},
 };
 
-//for the original dashboard:
-pub const FONT_SIZE_L: f32 = 96.0;
-pub const FONT_SIZE_M: f32 = 64.0;
-pub const FONT_SIZE_S: f32 = 48.0;
-// //testing on a smaller screen:
-// pub const FONT_SIZE_L: f32 = 64.0;
-// pub const FONT_SIZE_M: f32 = 48.0;
-// pub const FONT_SIZE_S: f32 = 32.0;
-
-pub const PADDING: f32 = 32.0;
-pub const DATE_TIME_FREQ: f32 = 0.1;
-pub const WEATHER_FREQ: f32 = 15.0 * 60.0;
-pub const STOCK_FREQ: f32 = 60.0 * 60.0;
-
 #[derive(AppState)]
 pub struct State {
     pub runtime: tokio::runtime::Runtime,
@@ -105,7 +91,7 @@ pub fn setup(app: &mut App, gfx: &mut Graphics) -> State {
         .create_font(include_bytes!("../assets/UbuntuMono-Bold.ttf"))
         .unwrap();
     let symbol_font = gfx
-        .create_font(include_bytes!("../assets/RubikMonoOne.ttf"))
+        .create_font(include_bytes!("../assets/RubikMonoOne-Regular.ttf"))
         .unwrap();
 
     let weather_config = Config::init_config(None).unwrap();
