@@ -10,9 +10,9 @@ mod utils;
 #[notan_main]
 fn main() -> Result<(), String> {
     let win_config = WindowConfig::new()
-        .resizable(true)
-        .maximized(true)
-        .fullscreen(true);
+        .set_resizable(true)
+        .set_maximized(true)
+        .set_fullscreen(true);
     notan::init_with(state::setup)
         .add_config(win_config)
         .add_config(TextConfig)
