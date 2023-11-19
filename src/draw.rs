@@ -6,19 +6,16 @@ use notan::text::*;
 pub fn draw(gfx: &mut Graphics, state: &mut State) {
     let (width, height) = gfx.size();
     let cx = (width as f32) / 2.0;
-
     let mut text: Text<'_> = gfx.create_text();
     text.clear_color(COLOR_BKG);
 
-    //create heading: date and time, preferrably centered.
-    //y pos is PADDING defined earlier. x pos should be closer to center.
+    // DRAW CLOCK
     text.add(&state.date)
         .font(&state.font)
         .position(cx, 100.0)
         .h_align_center()
         .color(COLOR_VIOLET)
         .size(FONT_SIZE_L);
-    //add time
     text.add(&state.time)
         .font(&state.font)
         .position(cx - PADDING, 100.0 + PADDING + FONT_SIZE_L)
@@ -26,8 +23,9 @@ pub fn draw(gfx: &mut Graphics, state: &mut State) {
         .h_align_center()
         .size(FONT_SIZE_L);
 
-    let mut y_pos = 100.0 + PADDING + FONT_SIZE_L + 2.0 * FONT_SIZE_M;
-    let y_pos_stocks = y_pos;
+    // DRAW WEATHER
+    let title_y = 100.0 + PADDING + FONT_SIZE_L + 2.0 * FONT_SIZE_M;
+    let content_y = title_y + FONT_SIZE_M + PADDING;
     let weather = state.weather_results.lock().unwrap();
     //weather condition:
     //x pos is center between 2cx/5 and 4cx/5
@@ -35,12 +33,11 @@ pub fn draw(gfx: &mut Graphics, state: &mut State) {
     //x pos is 0.4*cx, centered
     text.add(&weather.cond)
         .font(&state.font)
-        .position(0.5 * cx, y_pos)
+        .position(0.5 * cx, title_y)
         .h_align_center()
         .color(COLOR_GREEN)
         .size(FONT_SIZE_M);
 
-    y_pos += FONT_SIZE_M + PADDING;
     // Weather text and data
     let weather_items = [
         ("feels", &weather.temp_f, COLOR_GREEN),
@@ -50,7 +47,7 @@ pub fn draw(gfx: &mut Graphics, state: &mut State) {
         ("humidity", &weather.hum, COLOR_GREY),
     ];
     for (i, (wtext, wdata, color)) in weather_items.iter().enumerate() {
-        let y = y_pos + i as f32 * FONT_SIZE_M;
+        let y = content_y + i as f32 * FONT_SIZE_M;
         // Weather text
         text.add(wtext)
             .font(&state.font)
@@ -66,18 +63,17 @@ pub fn draw(gfx: &mut Graphics, state: &mut State) {
             .size(FONT_SIZE_M);
     }
 
-    //STOCKS HERE:
+    // DRAW STOCKS
     let stock_results = state.stock_results.lock().unwrap();
     text.add("STONKS\n")
         .font(&state.font)
-        .position(cx, y_pos_stocks)
+        .position(cx, title_y)
         .h_align_left()
         .color(Color::GRAY)
         .size(FONT_SIZE_M);
-    y_pos = y_pos_stocks + FONT_SIZE_M + PADDING;
     text.add("")
         .font(&state.symbol_font)
-        .position(cx, y_pos)
+        .position(cx, content_y)
         .size(FONT_SIZE_M);
     if stock_results.stocks.is_empty() {
         text.chain("can not fetch new stock data\n")
@@ -129,6 +125,7 @@ pub fn draw(gfx: &mut Graphics, state: &mut State) {
         }
     }
 
+    // DRAW METRIC CLOCK
     text.add(&state.metric_time)
         .font(&state.font)
         .position(PADDING, height as f32 - PADDING - FONT_SIZE)
