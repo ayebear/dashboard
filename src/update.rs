@@ -15,7 +15,10 @@ pub fn update(app: &mut App, state: &mut State) {
         state.date = Local::now().format("%A, %B %d").to_string();
         state.time = Local::now().format("%I:%M:%S %p").to_string();
         let (y, d, h, m, s) = metric_time();
-        state.metric_time = format!("{}, Day {}, {:01}:{:02}:{:02.0} Metric Time", y, d, h, m, s);
+        state.metric_time = format!(
+            "{} — Day {}, {:01}:{:02}:{:02.0} Metric Time",
+            y, d, h, m, s
+        );
     }
 
     if state.weather_count >= WEATHER_FREQ {
@@ -38,10 +41,7 @@ pub fn update(app: &mut App, state: &mut State) {
                 weather_out.temp_l = format!("{:.2}°F", weather_data.main.temp_min.fahrenheit());
                 weather_out.temp_h = format!("{:.2}°F", weather_data.main.temp_max.fahrenheit());
                 weather_out.hum = format!("{}%", weather_data.main.humidity);
-                weather_out.cond = format!(
-                    "{}",
-                    join(weather_data.weather.iter().map(|cond| &cond.main), " ")
-                );
+                weather_out.cond = join(weather_data.weather.iter().map(|cond| &cond.main), " ");
             } else {
                 println!("error fetching weather data :(");
             }
@@ -72,7 +72,7 @@ pub fn update(app: &mut App, state: &mut State) {
                     Stock {
                         //put symbol, price, percent into individual strings: draws will update the necessary
                         //space between them accordingly.
-                        symbol: format!("{}", result.symbol()),
+                        symbol: result.symbol().to_string(),
                         price: format!("{:.2}", result.price()),
                         percent: format!("   {:.2}%\n", result.change_percent()),
                         is_up,
