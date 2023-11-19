@@ -19,6 +19,10 @@ pub struct State {
     pub time: String,
     pub metric_time: String,
     pub date_time_count: f32,
+    // there was a reason for using both std::sync::Mutex and tokio::sync::Mutex, but I forgot why.
+    // basically a much simpler architecture would be to have normal state here (no arc/mutex),
+    // and have a channel accept any messages each frame to synchronously update the state.
+    // the async code would be separate and would only be able to send messages back.
     pub weather_fetch: Arc<tokio::sync::Mutex<WeatherFetch>>,
     pub weather_results: Arc<Mutex<WeatherResults>>,
     pub weather_count: f32,
@@ -63,11 +67,9 @@ pub struct StockResults {
 
 #[derive(Default, Clone)]
 pub struct Stock {
-    // symbol, price, percent
     pub symbol: String,
     pub price: String,
     pub percent: String,
-    // pub display: String, //old combo of the three things above.
     pub is_up: bool,
 }
 
@@ -100,9 +102,8 @@ pub fn setup(app: &mut App, gfx: &mut Graphics) -> State {
         &weather_config.api_path,
         &weather_config.geo_path,
     );
-
     let location = WeatherLocation::ZipCode {
-        zipcode: 20906,
+        zipcode: weather_config.zipcode.expect("zipcode not in .env"),
         country_code: Some(isocountry::CountryCode::USA),
     };
 

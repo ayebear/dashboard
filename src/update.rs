@@ -63,21 +63,13 @@ pub fn update(app: &mut App, state: &mut State) {
             });
             let results = future::join_all(calls).await;
 
-            // Store results
+            // Store stock results
             let mut stock_results = stock_results.lock().unwrap();
             for result in results.into_iter().flatten() {
                 let is_up = result.change_percent().is_sign_positive();
-                // let up_symbol = if is_up { "￪" } else { "￬" }; // not working in ubuntu font/notan
                 stock_results.stocks.insert(
                     result.symbol().to_string(),
                     Stock {
-                        // display: format!(
-                        //     "{:<4}    ${:.2}    {:0width$.2}%\n",
-                        //     result.symbol(),
-                        //     result.price(),
-                        //     result.change_percent(),
-                        //     width = 2,
-                        // ),
                         //put symbol, price, percent into individual strings: draws will update the necessary
                         //space between them accordingly.
                         symbol: format!("{}", result.symbol()),

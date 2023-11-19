@@ -2,7 +2,6 @@ use crate::consts::*;
 use crate::state::*;
 use notan::prelude::*;
 use notan::text::*;
-// use notan::draw::*;
 
 pub fn draw(gfx: &mut Graphics, state: &mut State) {
     let (width, height) = gfx.size();
@@ -29,8 +28,6 @@ pub fn draw(gfx: &mut Graphics, state: &mut State) {
 
     let mut y_pos = 100.0 + PADDING + FONT_SIZE_L + 2.0 * FONT_SIZE_M;
     let y_pos_stocks = y_pos;
-    // header for Weather saying the condition:
-    //weather preamble
     let weather = state.weather_results.lock().unwrap();
     //weather condition:
     //x pos is center between 2cx/5 and 4cx/5
@@ -89,23 +86,16 @@ pub fn draw(gfx: &mut Graphics, state: &mut State) {
             .size(FONT_SIZE_S);
     } else {
         for stock in stock_results.stocks.values() {
-            let color = if stock.is_up {
-                COLOR_STOCK_UP
-            } else {
-                COLOR_STOCK_DOWN
+            let color = match stock.is_up {
+                true => COLOR_STOCK_UP,
+                false => COLOR_STOCK_DOWN,
             };
-            // text.chain(&stock.display)
-            //     .font(&state.font)
-            //     .color(color)
-            //     .size(FONT_SIZE_M);
-
             text.chain(&stock.symbol)
                 .font(&state.font)
                 .color(color)
                 .size(FONT_SIZE_M);
 
-            let space_num: usize = 8 - &stock.symbol.len();
-            // println!("space num{}", space_num);
+            let space_num: usize = 8 - stock.symbol.len();
             for _i in 1..space_num {
                 text.chain("x")
                     .font(&state.font)
@@ -119,7 +109,7 @@ pub fn draw(gfx: &mut Graphics, state: &mut State) {
                 .color(color)
                 .size(FONT_SIZE_M);
 
-            let space_num: usize = 8 - &stock.price.len();
+            let space_num: usize = 8 - stock.price.len();
             for _i in 1..space_num {
                 text.chain("0")
                     .font(&state.font)
