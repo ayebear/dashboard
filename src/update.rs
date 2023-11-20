@@ -16,8 +16,12 @@ pub fn update(app: &mut App, state: &mut State) {
         state.time = Local::now().format("%I:%M:%S %p").to_string();
         let (y, d, h, m, s) = metric_time();
         state.metric_time = format!(
-            "{} — Day {}, {:01}:{:02}:{:02.0} Metric Time",
-            y, d, h, m, s
+            "{} — Day {}, {:01}:{:02}:{:02} Metric Time",
+            y,
+            d,
+            h,
+            m,
+            s.floor()
         );
     }
 
