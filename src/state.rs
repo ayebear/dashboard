@@ -4,7 +4,7 @@ use notan::prelude::*;
 use notan::text::*;
 use std::collections::BTreeMap;
 use std::env;
-use std::sync::{Arc, Mutex};
+use std::sync::mpsc::{channel, Receiver, Sender};
 use weather_util_rust::{
     config::Config,
     weather_api::{WeatherApi, WeatherLocation},
@@ -19,19 +19,18 @@ pub struct State {
     pub time: String,
     pub metric_time: String,
     pub date_time_count: f32,
-    // there was a reason for using both std::sync::Mutex and tokio::sync::Mutex, but I forgot why.
-    // basically a much simpler architecture would be to have normal state here (no arc/mutex),
-    // and have a channel accept any messages each frame to synchronously update the state.
-    // the async code would be separate and would only be able to send messages back.
-    pub weather_fetch: Arc<tokio::sync::Mutex<WeatherFetch>>,
-    pub weather_results: Arc<Mutex<WeatherResults>>,
+    pub weather_fetch: WeatherFetch,
+    pub weather_results: WeatherResults,
     pub weather_count: f32,
     pub stocks: Vec<String>,
     pub stocks_api_key: String,
-    pub stock_results: Arc<Mutex<StockResults>>,
+    pub stock_results: StockResults,
     pub stock_count: f32,
+    pub rx: Receiver<ChangeState>,
+    pub tx: Sender<ChangeState>,
 }
 
+#[derive(Clone)]
 pub struct WeatherFetch {
     pub weather_api: WeatherApi,
     pub location: WeatherLocation,
@@ -51,9 +50,9 @@ impl Default for WeatherResults {
     fn default() -> Self {
         WeatherResults {
             temp: String::from("?°F"),
-            temp_f: String::from("?ºF"),
-            temp_h: String::from("?ºF"),
-            temp_l: String::from("?ºF"),
+            temp_f: String::from("?°F"),
+            temp_h: String::from("?°F"),
+            temp_l: String::from("?°F"),
             hum: String::from("?%"),
             cond: String::from("???"),
         }
@@ -71,6 +70,12 @@ pub struct Stock {
     pub price: String,
     pub percent: String,
     pub is_up: bool,
+}
+
+#[derive(Clone)]
+pub enum ChangeState {
+    Stock(Stock),
+    Weather(WeatherResults),
 }
 
 pub fn setup(app: &mut App, gfx: &mut Graphics) -> State {
@@ -106,6 +111,7 @@ pub fn setup(app: &mut App, gfx: &mut Graphics) -> State {
         zipcode: weather_config.zipcode.expect("zipcode not in .env"),
         country_code: Some(isocountry::CountryCode::USA),
     };
+    let (tx, rx) = channel();
 
     State {
         runtime,
@@ -115,15 +121,17 @@ pub fn setup(app: &mut App, gfx: &mut Graphics) -> State {
         time: String::from("?"),
         metric_time: String::from("?"),
         date_time_count: DATE_TIME_FREQ,
-        weather_fetch: Arc::new(tokio::sync::Mutex::new(WeatherFetch {
+        weather_fetch: WeatherFetch {
             weather_api,
             location,
-        })),
-        weather_results: Arc::new(Mutex::new(WeatherResults::default())),
+        },
+        weather_results: WeatherResults::default(),
         weather_count: WEATHER_FREQ - 1.0,
         stocks,
         stocks_api_key,
-        stock_results: Arc::new(Mutex::new(StockResults::default())),
+        stock_results: StockResults::default(),
         stock_count: STOCK_FREQ - 1.0,
+        tx,
+        rx,
     }
 }
