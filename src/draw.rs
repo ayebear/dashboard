@@ -6,7 +6,7 @@ use notan::text::*;
 pub fn draw(gfx: &mut Graphics, state: &mut State) {
     let (width, height) = gfx.size();
     let cx = (width as f32) / 2.0;
-    let mut text: Text<'_> = gfx.create_text();
+    let mut text = gfx.create_text();
     text.clear_color(COLOR_BKG);
 
     // DRAW CLOCK
@@ -26,7 +26,7 @@ pub fn draw(gfx: &mut Graphics, state: &mut State) {
     // DRAW WEATHER
     let title_y = 100.0 + PADDING + FONT_SIZE_L + 2.0 * FONT_SIZE_M;
     let content_y = title_y + FONT_SIZE_M + PADDING;
-    let weather = state.weather_results.lock().unwrap();
+    let weather = &state.weather_results;
     //weather condition:
     //x pos is center between 2cx/5 and 4cx/5
     //0.8 - 0.4 = 0.4
@@ -64,7 +64,7 @@ pub fn draw(gfx: &mut Graphics, state: &mut State) {
     }
 
     // DRAW STOCKS
-    let stock_results = state.stock_results.lock().unwrap();
+    let stocks = &state.stock_results.stocks;
     text.add("STONKS\n")
         .font(&state.font)
         .position(cx, title_y)
@@ -75,13 +75,13 @@ pub fn draw(gfx: &mut Graphics, state: &mut State) {
         .font(&state.symbol_font)
         .position(cx, content_y)
         .size(FONT_SIZE_M);
-    if stock_results.stocks.is_empty() {
+    if stocks.is_empty() {
         text.chain("can not fetch new stock data\n")
             .font(&state.font)
             .color(Color::GRAY)
             .size(FONT_SIZE_S);
     } else {
-        for stock in stock_results.stocks.values() {
+        for stock in stocks.values() {
             let color = match stock.is_up {
                 true => COLOR_STOCK_UP,
                 false => COLOR_STOCK_DOWN,
